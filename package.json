@@ -8,6 +8,7 @@
     "db:processor": "bun run src/modules/location-tracker/database-processor.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:apply": "node scripts/apply-schema.mjs",
     "db:studio": "drizzle-kit studio",
     "kafka:admin": "bun run src/modules/location-tracker/kafka-admin.js"
   },

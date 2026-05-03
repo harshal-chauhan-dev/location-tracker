@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live Location Tracker</title>
+    <title>Locus · Live map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -11,42 +17,283 @@
       crossorigin=""
     />
     <style>
-      #map {
-        height: 100vh;
+      :root {
+        --bg: #070b12;
+        --surface: rgba(18, 26, 42, 0.85);
+        --border: rgba(94, 234, 212, 0.18);
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #2dd4bf;
+        --accent-dim: rgba(45, 212, 191, 0.15);
+        --glow: 0 0 32px rgba(45, 212, 191, 0.12);
+        --header-h: 3.5rem;
+        --radius: 12px;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
       }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--header-h);
+        z-index: 1100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1rem 0 1.125rem;
+        background: linear-gradient(
+          180deg,
+          rgba(7, 11, 18, 0.92) 0%,
+          rgba(7, 11, 18, 0.72) 70%,
+          transparent 100%
+        );
+        backdrop-filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .app-header > * {
+        pointer-events: auto;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+
+      .brand-mark {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #2dd4bf 0%, #22d3ee 50%, #818cf8 100%);
+        box-shadow: var(--glow);
+        display: grid;
+        place-items: center;
+      }
+
+      .brand-mark svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        color: #070b12;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+      }
+
+      .brand-text strong {
+        font-size: 0.9375rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .brand-text span {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .live-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-dim);
+        border: 1px solid var(--border);
+      }
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 10px var(--accent);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.65;
+          transform: scale(0.92);
+        }
+      }
+
+      #map-shell {
+        position: fixed;
+        top: var(--header-h);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+        background: #0f172a;
+      }
+
+      .leaflet-container {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      }
+
+      .leaflet-control-attribution {
+        background: rgba(7, 11, 18, 0.75) !important;
+        color: var(--muted) !important;
+        border-radius: 6px 0 0 0 !important;
+        backdrop-filter: blur(8px);
+        font-size: 0.65rem !important;
+      }
+
+      .leaflet-control-attribution a {
+        color: var(--accent) !important;
+      }
+
       #go-to-my-location {
         display: none;
         position: fixed;
-        bottom: 24px;
-        right: 24px;
+        bottom: 1.5rem;
+        right: 1.25rem;
         z-index: 1000;
-        background: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        width: 3.25rem;
+        height: 3.25rem;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), var(--glow);
         cursor: pointer;
-        padding: 8px;
+        color: var(--accent);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s;
       }
+
       #go-to-my-location:hover {
-        background: #f0f0f0;
+        transform: translateY(-2px);
+        border-color: rgba(45, 212, 191, 0.45);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 28px rgba(45, 212, 191, 0.2);
+      }
+
+      #go-to-my-location svg {
+        width: 1.35rem;
+        height: 1.35rem;
+        display: block;
+        margin: auto;
+      }
+
+      #location-status {
+        display: none;
+        position: fixed;
+        left: 50%;
+        bottom: 1.25rem;
+        transform: translateX(-50%);
+        z-index: 1001;
+        max-width: min(420px, calc(100% - 2rem));
+        padding: 0.65rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1.45;
+        color: #fecdd3;
+        background: rgba(30, 20, 24, 0.92);
+        border: 1px solid rgba(251, 113, 133, 0.35);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(10px);
+        text-align: center;
+      }
+
+      #location-status.visible {
+        display: block;
+      }
+
+      .self-marker-wrap {
+        background: none !important;
+        border: none !important;
+      }
+
+      .self-marker-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2dd4bf, #22d3ee);
+        border: 3px solid rgba(7, 11, 18, 0.9);
+        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35);
       }
     </style>
   </head>
   <body>
-    <div id="map"></div>
-    <button id="go-to-my-location" title="Go to my location">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <strong>Locus</strong>
+          <span>Live positions</span>
+        </div>
+      </div>
+      <div class="live-pill" title="Sharing location with your group">
+        <span class="live-dot" aria-hidden="true"></span>
+        Live
+      </div>
+    </header>
+
+    <div id="map-shell">
+      <div id="map" role="application" aria-label="Interactive map"></div>
+    </div>
+
+    <button
+      type="button"
+      id="go-to-my-location"
+      title="Go to my location"
+      aria-label="Recenter map on my location"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        fill="#1a73e8"
+        fill="currentColor"
       >
         <path
           d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"
         />
       </svg>
     </button>
+
+    <div id="location-status" role="status" aria-live="polite"></div>
 
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -62,14 +309,86 @@
           '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
 
-      const socket = io();
+      const selfIcon = L.divIcon({
+        className: "self-marker-wrap",
+        html: '<div class="self-marker-dot" aria-hidden="true"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      });
 
+      const socket = io();
       const remoteMarkers = new Map();
+      const locationStatusEl = document.getElementById("location-status");
+
+      function setLocationStatus(message) {
+        if (!message) {
+          locationStatusEl.textContent = "";
+          locationStatusEl.classList.remove("visible");
+          return;
+        }
+        locationStatusEl.textContent = message;
+        locationStatusEl.classList.add("visible");
+      }
+
+      function geoErrorMessage(err) {
+        const code = err && err.code;
+        if (code === 1)
+          return "Location permission denied. Allow location for this site in your browser settings.";
+        if (code === 2) return "Your device could not determine its position. Try again or move outdoors.";
+        if (code === 3) return "Location request timed out. Try disabling battery saver or Wi‑Fi location.";
+        return "Could not read your location. Check browser permissions and try again.";
+      }
+
+      function getUserCurrentLocation(opts) {
+        return new Promise((resolve, reject) => {
+          if (!("geolocation" in navigator)) {
+            reject(new Error("unsupported"));
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            (pos) =>
+              resolve({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+              }),
+            reject,
+            {
+              enableHighAccuracy: opts?.enableHighAccuracy ?? true,
+              timeout: opts?.timeout ?? 12000,
+              maximumAge: opts?.maximumAge ?? 10000,
+            },
+          );
+        });
+      }
+
+      async function readPositionWithFallback() {
+        try {
+          return await getUserCurrentLocation({
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+          });
+        } catch (e1) {
+          try {
+            return await getUserCurrentLocation({
+              enableHighAccuracy: false,
+              timeout: 20000,
+              maximumAge: 60000,
+            });
+          } catch (e2) {
+            throw e2;
+          }
+        }
+      }
 
       socket.on(
         "server:location:update",
         ({ userId, firstName, latitude, longitude }) => {
-          if (userId === socket.userId) return;
+          if (
+            socket.userId != null &&
+            String(userId) === String(socket.userId)
+          )
+            return;
 
           if (!remoteMarkers.has(userId)) {
             const marker = L.marker([latitude, longitude]);
@@ -99,24 +418,6 @@
         socket.userId = userId;
       });
 
-      function getUserCurrentLocation() {
-        return new Promise((res, rej) => {
-          if (!("geolocation" in navigator)) {
-            alert("Geolocation is not supported by this browser.");
-            return;
-          }
-          navigator.geolocation.getCurrentPosition(
-            (pos) =>
-              res({
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-              }),
-            (err) => rej(err),
-            { enableHighAccuracy: true },
-          );
-        });
-      }
-
       let userCurrentLocationMarker = null;
       let lastKnownLatLng = null;
       const goToMyLocationBtn = document.getElementById("go-to-my-location");
@@ -134,13 +435,16 @@
         goToMyLocationBtn.style.display = dist > 2000 ? "block" : "none";
       });
 
-      async function mapper() {
-        setInterval(async () => {
-          const { latitude, longitude } = await getUserCurrentLocation();
+      async function pushLocationUpdate() {
+        try {
+          const { latitude, longitude } = await readPositionWithFallback();
+          setLocationStatus("");
           socket.emit("client:location:update", { latitude, longitude });
 
           if (!userCurrentLocationMarker) {
-            userCurrentLocationMarker = L.marker([latitude, longitude])
+            userCurrentLocationMarker = L.marker([latitude, longitude], {
+              icon: selfIcon,
+            })
               .addTo(map)
               .bindPopup("You are here.");
             map.flyTo([latitude, longitude], 15);
@@ -152,10 +456,34 @@
               map.panTo(newLatLng, map.getZoom());
             lastKnownLatLng = newLatLng;
           }
-        }, 5 * 1000);
+        } catch (err) {
+          if (String(err && err.message) === "unsupported") {
+            setLocationStatus(
+              "This browser does not support geolocation. Try another browser or device.",
+            );
+            return;
+          }
+          setLocationStatus(geoErrorMessage(err));
+        }
       }
 
-      window.addEventListener("load", mapper);
+      function startLocationLoop() {
+        if (!window.isSecureContext) {
+          setLocationStatus(
+            "Geolocation needs a secure context. Use http://localhost:3003 or HTTPS—not http://192.168.x.x from another device.",
+          );
+          return;
+        }
+        pushLocationUpdate();
+        setInterval(pushLocationUpdate, 5 * 1000);
+      }
+
+      window.addEventListener("load", () => {
+        requestAnimationFrame(() => {
+          map.invalidateSize();
+        });
+        startLocationLoop();
+      });
     </script>
   </body>
 </html>

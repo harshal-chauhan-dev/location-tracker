@@ -1,5 +1,9 @@
 # Live location tracker
 
+## Video demo
+
+[Locus / location tracker — walkthrough on YouTube](https://youtu.be/h0M3PO9cBv4)
+
 ## Project overview
 
 This repository is a small **real-time location sharing** demo with **two Node servers**: an **OIDC-style authentication API** (signup, sign-in, JWT issuance, discovery endpoints) and a **location tracker** that serves the map UI, verifies sessions over **HTTP + WebSocket**, and streams position updates through **Apache Kafka**. Other browsers see your marker move on a shared **Leaflet** map.
