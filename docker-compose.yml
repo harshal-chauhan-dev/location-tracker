@@ -1,4 +1,16 @@
 services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: oidc_oauth
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
   kafka:
     image: apache/kafka:4.2.0
     container_name: kafka
@@ -15,3 +27,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+volumes:
+  pgdata:
